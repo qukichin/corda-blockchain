@@ -1,0 +1,10 @@
+[nodes]
+10.10.10.101 corda_country=GB corda_city=London corda_org="Test" corda_admin_email=qukichin@163.com corda_role=node
+
+[notary]
+10.10.10.102 corda_country=FR corda_city=Paris corda_org=Notary corda_admin_email=qukichin@163.com  corda_role=notary corda_notary_type="non_validating"
+
+[corda:children]
+nodes
+notary
+nameserver

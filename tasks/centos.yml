@@ -1,0 +1,31 @@
+---
+- name: Add Zulu.org JDK key
+  rpm_key:
+    key: http://repos.azulsystems.com/RPM-GPG-KEY-azulsystems
+    state: present
+  when: corda_java == "openjdk"
+
+- name: Add Zulu.org JDK repository
+  yum_repository:
+    name: zulu
+    description: OpenJDK repo
+    baseurl: "http://repos.azulsystems.com/rhel/$releasever/$basearch"
+    gpgcheck: yes
+    state: present
+  when: corda_java == "openjdk"
+
+- name: Install OpenJDK
+  yum:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - zulu-8
+  when: corda_java == "openjdk"
+
+- name: Install LXML (required for Maven Central download)
+  yum:
+    pkg: python-lxml
+    state: present
+  when: corda_source == "maven"
+

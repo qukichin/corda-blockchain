@@ -1,0 +1,12 @@
+[Unit]
+Description=Corda Node
+Requires=network.target
+
+[Service]
+Type=simple
+User={{ corda_user }}
+WorkingDirectory={{ corda_dir_location }}
+ExecStart=/usr/bin/java {{ corda_java_options }} -jar {{ corda_dir_location }}/corda.jar
+
+[Install]
+WantedBy=multi-user.target

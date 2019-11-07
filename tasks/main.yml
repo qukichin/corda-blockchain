@@ -1,0 +1,90 @@
+---
+- name: Check that password for keystore is defined
+  assert:
+    that: corda_password_keystore is defined
+    msg: "Having password to keystore in config file is not ideal, but for now please set 'corda_password_keystore' to a value"
+
+# For Ubuntu
+- include: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+# For Centos
+- include: centos.yml
+  when: ansible_distribution == 'CentOS'
+
+- name: Create group
+  group:
+    name: "{{ corda_user }}"
+    state: present
+
+- name: Create user
+  user:
+    name: "{{ corda_user }}"
+    groups: "{{ corda_user }}"
+    state: present
+    createhome: no
+    shell: /bin/false
+
+- name: Prepare Corda directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ corda_user }}"
+    group: "{{ corda_user }}"
+    mode: 0755
+  loop:
+      - "{{ corda_dir_location }}"
+      - "{{ corda_dir_location }}/certificates"
+
+- name: Install systemd startup file
+  template:
+    src: "{{ item }}.service.j2"
+    dest: /etc/systemd/system/{{ item }}.service
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - corda
+  notify:
+    - restart corda
+
+- name: Install config file (version 3+)
+  template:
+    src: node.conf.j2
+    dest: "{{ corda_dir_location }}/node.conf"
+    owner: "{{ corda_user }}"
+    group: "{{ corda_user }}"
+    mode: 0755
+  when: corda_version|version_compare('3','>=')
+
+# For jars from Maven Central
+- include: source_maven.yml
+  when: corda_source == "maven"
+
+# For jars from local directory
+- include: source_local.yml
+  when: corda_source == "local"
+
+# For jars from Artifactory (snapshots)
+- include: source_artifactory.yml
+  when: corda_source == "artifactory"
+
+- name: Copy network-truststore
+  copy:
+    src: "{{ corda_local_path }}/network-root-truststore.jks"
+    dest: "{{ corda_dir_location }}/certificates/"
+    owner: "{{ corda_user }}"
+    group: "{{ corda_user }}"
+    mode: 0600
+  when: not corda_devmode|bool and corda_initial_registration
+
+- name: Register node
+  shell: "java -jar corda.jar --initial-registration --network-root-truststore-password {{ corda_password_truststore }}"
+  args:
+    chdir: "{{ corda_dir_location }}"
+  become: true
+  become_user: "{{ corda_user }}"
+  notify:
+    - start corda
+  when: not corda_devmode|bool and corda_initial_registration
+

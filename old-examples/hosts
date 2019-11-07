@@ -1,0 +1,12 @@
+[nodes]
+corda-node1.your.domain corda_city="London" corda_legal_name="Corda Node in London" corda_admin_email="qukichin@163.com" corda_role="node"
+corda-node2.your.domain corda_city="New York" corda_legal_name="Corda Node in New York" corda_admin_email="qukichin@163.com" corda_role="node"
+corda-node3.your.domain corda_city="Singapoure" corda_legal_name="Corda Node in Singapoure" corda_admin_email="qukichin@163.com" corda_role="node"
+
+[notary]
+corda-notary.your.domain corda_city="Hague" corda_legal_name="Corda Notary" corda_admin_email="ops@your.domain" corda_role="notary"
+
+[corda:children]
+nodes
+notary
+
